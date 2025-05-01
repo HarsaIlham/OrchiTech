@@ -1,0 +1,49 @@
+{
+  "project_info": {
+    "project_number": "110443007369",
+    "firebase_url": "https://orchitech-c6c49-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "orchitech-c6c49",
+    "storage_bucket": "orchitech-c6c49.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:110443007369:android:1e2714fe100b1a5670a558",
+        "android_client_info": {
+          "package_name": "com.company.myapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB3aHwcefzlXj5LTVY1fRkU3tKvACvzYOI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:110443007369:android:a1f4230971cac56470a558",
+        "android_client_info": {
+          "package_name": "com.example.orchitech"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB3aHwcefzlXj5LTVY1fRkU3tKvACvzYOI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
