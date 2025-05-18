@@ -9,6 +9,7 @@ class ColorAnimated {
 }
 
 // Custom AppBar sebagai StatelessWidget
+// ignore: must_be_immutable
 class WidgetAppBar extends StatelessWidget implements PreferredSizeWidget {
   final ColorAnimated colorAnimated;
   final String title;
@@ -36,6 +37,7 @@ class WidgetAppBar extends StatelessWidget implements PreferredSizeWidget {
           fontWeight: FontWeight.bold,
         ),
       ),
+      automaticallyImplyLeading: false,
     );
   }
 }

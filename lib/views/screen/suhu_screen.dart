@@ -1,8 +1,11 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:flutter_advanced_switch/flutter_advanced_switch.dart';
-import 'package:orchitech/pages/riwayat_pendingin.dart';
+import 'package:orchitech/controllers/aktivasi_pendingin_controller.dart';
+import 'package:orchitech/controllers/sensor_suhu_controller.dart';
+import 'package:orchitech/views/pages/riwayat_pendingin.dart';
 import '/widget/appbar.dart';
-import '../service.dart';
 import 'package:numberpicker/numberpicker.dart';
 
 class ScreenSuhu extends StatefulWidget {
@@ -14,7 +17,8 @@ class ScreenSuhu extends StatefulWidget {
 }
 
 class _ScreenSuhuState extends State<ScreenSuhu> {
-  final FirebaseService _firebaseService = FirebaseService();
+  final _pendinginController = AktivasiPendinginController();
+  final _suhuController = SensorSuhuController();
   final _controller = ValueNotifier<bool>(false);
   double suhu = 0.0;
   int kelembaban = 0;
@@ -24,7 +28,13 @@ class _ScreenSuhuState extends State<ScreenSuhu> {
   @override
   void initState() {
     super.initState();
-    getLatestData();
+    _pendinginController.showStatusPendingin().listen((data) {
+      if (data != null) {
+        setState(() {
+          _controller.value = data.statusPendingin;
+        });
+      }
+    });
   }
 
   void _editSuhu() {
@@ -35,8 +45,9 @@ class _ScreenSuhuState extends State<ScreenSuhu> {
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter setStateDialog) {
             return AlertDialog(
-              title: Text('Pilih Batas Suhu',
-              style: TextStyle(fontWeight: FontWeight.bold),
+              title: Text(
+                'Pilih Batas Suhu',
+                style: TextStyle(fontWeight: FontWeight.bold),
               ),
               content: NumberPicker(
                 textStyle: TextStyle(fontWeight: FontWeight.bold),
@@ -54,9 +65,6 @@ class _ScreenSuhuState extends State<ScreenSuhu> {
                   },
                 ),
                 ElevatedButton(
-                  child: Text('Simpan', 
-                  style: TextStyle(color: Colors.white,
-                  fontWeight: FontWeight.bold),),
                   onPressed: () {
                     setState(() {
                       batassuhu = tempValue;
@@ -65,6 +73,13 @@ class _ScreenSuhuState extends State<ScreenSuhu> {
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Color(0xFF1C7C56),
+                  ),
+                  child: Text(
+                    'Simpan',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ],
@@ -75,38 +90,6 @@ class _ScreenSuhuState extends State<ScreenSuhu> {
     );
   }
 
-  void getLatestData() async {
-    _firebaseService.getLatestStatus().listen((status) {
-      if (status != null) {
-        setState(() {
-          final idSuhu = status.idSuhu;
-          batassuhu = status.batasSuhu;
-          final statusPendingin = status.statusPendingin;
-
-          _controller.value = statusPendingin == 0 ? false : true;
-
-          if (idSuhu != null) {
-            _firebaseService.getLatestSuhu(idSuhu).listen((sensor) {
-              if (sensor != null) {
-                setState(() {
-                  suhu = sensor.suhu;
-                  kelembaban = sensor.kelembaban.toInt();
-
-                  if (kelembaban < 30) {
-                    desKelembaban = "Kering";
-                  } else if (kelembaban >= 30 && kelembaban <= 70) {
-                    desKelembaban = "Sedang";
-                  } else {
-                    desKelembaban = "Lembab";
-                  }
-                });
-              }
-            });
-          }
-        });
-      }
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -122,76 +105,92 @@ class _ScreenSuhuState extends State<ScreenSuhu> {
         children: [
           Padding(
             padding: const EdgeInsets.all(8.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                Container(
-                  padding: const EdgeInsets.fromLTRB(16, 24, 16, 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Suhu:',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                          height: 0,
-                        ),
+            child: StreamBuilder(
+              stream: _suhuController.sensorStream,
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                final data = snapshot.data!;
+                if (data.kelembaban < 30) {
+                  desKelembaban = "Kering";
+                } else if (data.kelembaban >= 30 && data.kelembaban <= 70) {
+                  desKelembaban = "Sedang";
+                } else {
+                  desKelembaban = "Lembab";
+                }
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.fromLTRB(16, 24, 16, 16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Suhu:',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                              height: 0,
+                            ),
+                          ),
+                          Text(
+                            '${data.suhu}°C',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 34,
+                              height: 0,
+                              color: Color.fromRGBO(3, 68, 45, 1),
+                            ),
+                          ),
+                          Text(
+                            'Celcius',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w100,
+                              fontSize: 16,
+                              height: 0,
+                            ),
+                          ),
+                        ],
                       ),
-                      Text(
-                        '$suhu°C',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 34,
-                          height: 0,
-                          color: Color.fromRGBO(3, 68, 45, 1),
-                        ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 24, 16, 16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Kelembaban:',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                              height: 0,
+                            ),
+                          ),
+                          Text(
+                            '${data.kelembaban} %',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 34,
+                              height: 0,
+                              color: Color.fromRGBO(3, 68, 45, 1),
+                            ),
+                          ),
+                          Text(
+                            '$desKelembaban',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w100,
+                              fontSize: 16,
+                              height: 0,
+                            ),
+                          ),
+                        ],
                       ),
-                      Text(
-                        'Celcius',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w100,
-                          fontSize: 16,
-                          height: 0,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 24, 16, 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Kelembaban:',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                          height: 0,
-                        ),
-                      ),
-                      Text(
-                        '$kelembaban %',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 34,
-                          height: 0,
-                          color: Color.fromRGBO(3, 68, 45, 1),
-                        ),
-                      ),
-                      Text(
-                        '$desKelembaban',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w100,
-                          fontSize: 16,
-                          height: 0,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+                    ),
+                  ],
+                );
+              },
             ),
           ),
           Padding(
@@ -239,9 +238,15 @@ class _ScreenSuhuState extends State<ScreenSuhu> {
                           fontSize: 20,
                         ),
                       ),
+                      onChanged: (dynamic rawValue) {
+                        _pendinginController.editStatusPendingin(
+                          rawValue as bool,
+                        );
+                      },
                     ),
                   ),
                 ),
+
                 SizedBox(height: 20),
                 Card(
                   elevation: 4,

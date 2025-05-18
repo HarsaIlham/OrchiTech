@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:orchitech/pages/jadwal_penyiraman.dart';
-import 'package:orchitech/pages/riwayat_penyiraman.dart';
+import '../pages/jadwal_penyiraman.dart';
+import '../pages/riwayat_penyiraman.dart';
 import '/widget/appbar.dart';
 import 'package:flutter_advanced_switch/flutter_advanced_switch.dart';
 
@@ -15,6 +15,7 @@ class Penyiraman extends StatefulWidget {
 class _PenyiramanState extends State<Penyiraman> {
   final _controller = ValueNotifier<bool>(false);
   final _controller1 = ValueNotifier<bool>(false);
+  // ignore: unused_field
   bool _checked = false;
   bool _isTapped = false;
   @override

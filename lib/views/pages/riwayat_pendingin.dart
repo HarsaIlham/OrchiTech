@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:orchitech/widget/appbar.dart';
+import '../../widget/appbar.dart';
 
 class RiwayatPendingin extends StatefulWidget {
   const RiwayatPendingin({super.key});
