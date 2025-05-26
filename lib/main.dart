@@ -46,7 +46,7 @@ class MyApp extends StatelessWidget {
       routes: {
         HomePage.routeName: (context) => HomePage(),
         Penyiraman.routeName: (context) => Penyiraman(),
-        ScreenSuhu.routeName: (context) => ScreenSuhu(),
+        SuhuScreen.routeName: (context) => SuhuScreen(),
         RiwayatPenyiraman.routeName: (context) => RiwayatPenyiraman(),
         RiwayatPendingin.routeName: (context) => RiwayatPendingin(),
         GantiPasswordPage.routeName: (context) => GantiPasswordPage(),

@@ -20,7 +20,7 @@ class _MainPageState extends State<MainPage> {
   final List<Widget> _pages = [
     HomePage(), 
     Penyiraman(), 
-    ScreenSuhu(),
+    SuhuScreen(),
     ProfilScreen(),];
   late int _selectedIndex;
 

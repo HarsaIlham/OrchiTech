@@ -12,15 +12,15 @@ import 'package:provider/provider.dart';
 import '/widget/appbar.dart';
 import 'package:numberpicker/numberpicker.dart';
 
-class ScreenSuhu extends StatefulWidget {
-  const ScreenSuhu({super.key});
+class SuhuScreen extends StatefulWidget {
+  const SuhuScreen({super.key});
   static const routeName = '/suhuscreen';
 
   @override
-  State<ScreenSuhu> createState() => _ScreenSuhuState();
+  State<SuhuScreen> createState() => _SuhuScreenState();
 }
 
-class _ScreenSuhuState extends State<ScreenSuhu> {
+class _SuhuScreenState extends State<SuhuScreen> {
   final _pendinginController = AktivasiPendinginController();
   final _suhuController = SensorSuhuController();
   final _controller = ValueNotifier<bool>(false);
