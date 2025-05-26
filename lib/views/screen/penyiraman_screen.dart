@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:orchitech/controllers/status_penyiraman_controller.dart';
+import 'package:orchitech/provider/status_penyiraman_provider.dart';
+import 'package:provider/provider.dart';
 import '../pages/jadwal_penyiraman.dart';
 import '../pages/riwayat_penyiraman.dart';
 import '/widget/appbar.dart';
@@ -13,23 +16,50 @@ class Penyiraman extends StatefulWidget {
 }
 
 class _PenyiramanState extends State<Penyiraman> {
+  final _statusController = StatusPenyiramanController();
   final _controller = ValueNotifier<bool>(false);
   final _controller1 = ValueNotifier<bool>(false);
-  // ignore: unused_field
   bool _checked = false;
   bool _isTapped = false;
+  bool _updateBySistem1 = false;
+  bool _updateBySistem2 = false;
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final provider = context.read<StatusPenyiramanProvider>();
+      _controller.value = provider.status1;
+      _controller1.value = provider.status2; // Inisialisasi awal
 
-    _controller.addListener(() {
-      setState(() {
-        if (_controller.value) {
-          _checked = true;
-        } else {
-          _checked = false;
+      provider.addListener(() {
+        if (_controller.value != provider.status1) {
+          _updateBySistem1 = true;
+          _controller.value = provider.status1;
+        }
+        if (_controller1.value != provider.status2) {
+          _updateBySistem2 = true;
+          _controller1.value = provider.status2;
         }
       });
+    });
+
+    _controller.addListener(() {
+      if (_updateBySistem1) {
+        _updateBySistem1 = false;
+        return;
+      }
+      print("UPDATE 1 BY USER = ${_controller.value}");
+      _statusController.editStatusPenyiraman(_controller.value, 1);
+    });
+
+    _controller1.addListener(() {
+      if (_updateBySistem2) {
+        _updateBySistem2 = false;
+        return;
+      }
+      print("UPDATE 1 BY USER = ${_controller1.value}");
+      _statusController.editStatusPenyiraman(_controller1.value, 2);
     });
   }
 

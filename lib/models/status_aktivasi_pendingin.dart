@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:orchitech/services/mqtt_services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -34,23 +36,10 @@ class StatusAktivasiPendingin {
     };
   }
 
-  static Stream<StatusAktivasiPendingin?> getStatusPendingin() async* {
-    final initial =
-        await supabase
-            .from('status_aktivasi_pendingin')
-            .select()
-            .order('created_at', ascending: false)
-            .limit(1)
-            .maybeSingle();
-
-    if (initial != null) {
-      yield StatusAktivasiPendingin.fromMap(initial);
-    }
-
-    // Listen perubahan realtime
-    yield* supabase
+  static Stream<StatusAktivasiPendingin?> streamFromDatabase() {
+    return supabase
         .from('status_aktivasi_pendingin')
-        .stream(primaryKey: ['id'])
+        .stream(primaryKey: ['id_status_aktivasi_pendingin'])
         .order('created_at', ascending: false)
         .limit(1)
         .map(
@@ -61,12 +50,14 @@ class StatusAktivasiPendingin {
         );
   }
 
-  static Future<void> updateBatasSuhu(double batasBaru) async {
+
+
+  static Future<void> updateBatasSuhu(int batasBaru) async {
     try {
       final response = await supabase
           .from('status_aktivasi_pendingin')
           .update({'batas_suhu': batasBaru})
-          .eq('id', 1); // atau ID yang sesuai
+          .eq('id_status_aktivasi_pendingin', 1); // atau ID yang sesuai
 
       if (response.isEmpty) {
         print('Gagal update. Data tidak ditemukan.');
@@ -80,14 +71,12 @@ class StatusAktivasiPendingin {
 
   static Future<void> updateStatusAktivasiPendingin(bool status) async {
     try {
-      await supabase
-          .from('status_aktivasi_pendingin')
-          .update({'status_aktivasi_pendingin': status})
-          .eq('id_status_aktivasi_pendingin', 1);
-
-      print('Status pendingin berhasil diperbarui: $status');
-
-      _mqttService.publish('orchitech/status', status ? '{"status" : "ON"}' : '{"status" : "OFF"}'); // Sesuaikan dengan topik MQTT yang sesuaion' : 'off');
+      _mqttService.publish(
+        'orchitech/status',
+        status
+            ? '{"status": "On", "source": "manual"}'
+            : '{"status": "Off", "source": "manual"}',
+      ); // Sesuaikan dengan topik MQTT yang sesuaion' : 'off');
     } catch (e) {
       print('Error update status pendingin: $e');
     }

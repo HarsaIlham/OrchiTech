@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:orchitech/controllers/riwayat_penyiraman_controller.dart';
+import 'package:orchitech/extension/riwayat_extensions.dart';
+import 'package:orchitech/models/riwayat_penyiraman_model.dart';
 import '../../widget/appbar.dart';
 
 class RiwayatPenyiraman extends StatefulWidget {
@@ -10,11 +13,7 @@ class RiwayatPenyiraman extends StatefulWidget {
 }
 
 class _RiwayatPenyiramanState extends State<RiwayatPenyiraman> {
-  List<Map<String, String>> riwayat = [
-    {"jalur": "Jalur Penyiraman 1", "hari": "Senin", "waktu": "08:30 AM"},
-    {"jalur": "Jalur Penyiraman 2", "hari": "Senin", "waktu": "09:30 AM"},
-    {"jalur": "Jalur Penyiraman 1", "hari": "Selasa", "waktu": "08:30 AM"},
-  ];
+  final _controller = RiwayatPenyiramanController();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -36,46 +35,62 @@ class _RiwayatPenyiramanState extends State<RiwayatPenyiraman> {
           children: [
             Text(
               'Penyiraman Terakhir Aktif',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20,),
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
               textAlign: TextAlign.start,
             ),
             Expanded(
-              child: ListView.builder(
-                itemCount: riwayat.length,
-                itemBuilder: (context, index) {
-                  final item = riwayat[index];
-                  return Card(
-                    margin: EdgeInsets.symmetric(vertical: 2),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      side: BorderSide(color: Colors.black),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      child: Row(
-                        children: [
-                          Expanded(flex: 3, child: Text(item['jalur'] ?? '')),
-                          Expanded(
-                            flex: 2,
-                            child: Container(
-                              padding: const EdgeInsets.all(12),
-                              color: Colors.green.withAlpha(25),
-                              child: Text(
-                                item['hari'] ?? '',
-                                textAlign: TextAlign.center,
+              child: StreamBuilder<List<RiwayatPenyiramanModel>>(
+                stream: _controller.showRiwayat(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Center(child: CircularProgressIndicator());
+                  }
+                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return Center(child: Text('Data riwayat pendingin kosong'));
+                  }
+
+                  final riwayatList = snapshot.data!;
+                  return ListView.builder(
+                    itemCount: riwayatList.length,
+                    itemBuilder: (context, index) {
+                      final item = riwayatList[index];
+                      return Card(
+                        margin: EdgeInsets.symmetric(vertical: 2),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          side: BorderSide(color: Colors.black),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                flex: 3,
+                                child: Text(item.tanggalIndo),
                               ),
-                            ),
+                              Expanded(
+                                flex: 2,
+                                child: Container(
+                                  padding: const EdgeInsets.all(12),
+                                  color: Colors.green.withAlpha(25),
+                                  child: Text(
+                                    item.hariIndo,
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                flex: 2,
+                                child: Text(
+                                  item.jamIndo,
+                                  textAlign: TextAlign.end,
+                                ),
+                              ),
+                            ],
                           ),
-                          Expanded(
-                            flex: 2,
-                            child: Text(
-                              item['waktu'] ?? '',
-                              textAlign: TextAlign.end,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                        ),
+                      );
+                    },
                   );
                 },
               ),

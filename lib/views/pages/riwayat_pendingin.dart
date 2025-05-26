@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:orchitech/controllers/riwayat_pendingin_controller.dart';
+import 'package:orchitech/extension/riwayat_extensions.dart';
+import 'package:orchitech/models/riwayat_pendingin_model.dart';  // PASTIKAN import model yang benar
 import '../../widget/appbar.dart';
 
 class RiwayatPendingin extends StatefulWidget {
@@ -10,11 +13,8 @@ class RiwayatPendingin extends StatefulWidget {
 }
 
 class _RiwayatPendinginState extends State<RiwayatPendingin> {
-  List<Map<String, String>> riwayat = [
-    {'tanggal': '21 April 2025', 'suhu': '30°C', 'waktu': '08.30'},
-    {'tanggal': '21 April 2025', 'suhu': '32°C', 'waktu': '09.30'},
-    {'tanggal': '21 April 2025', 'suhu': '31°C', 'waktu': '10.30'},
-  ];
+  final _controller = RiwayatPendinginController();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -40,42 +40,66 @@ class _RiwayatPendinginState extends State<RiwayatPendingin> {
               textAlign: TextAlign.start,
             ),
             Expanded(
-              child: ListView.builder(
-                itemCount: riwayat.length,
-                itemBuilder: (context, index) {
-                  final item = riwayat[index];
-                  return Card(
-                    margin: EdgeInsets.symmetric(vertical: 2),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      side: BorderSide(color: Colors.black),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      child: Row(
-                        children: [
-                          Expanded(flex: 3, child: Text(item['tanggal'] ?? '')),
-                          Expanded(
-                            flex: 2,
-                            child: Container(
-                              padding: const EdgeInsets.all(12),
-                              color: Colors.green.withAlpha(25),
-                              child: Text(
-                                item['suhu'] ?? '',
-                                textAlign: TextAlign.center,
+              child: StreamBuilder<List<RiwayatPendinginModel>>(
+                stream: _controller.showRiwayat(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    // Loading indicator saat menunggu data stream
+                    return Center(child: CircularProgressIndicator());
+                  }
+                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    // Jika data kosong
+                    return Center(child: Text('Data riwayat pendingin kosong'));
+                  }
+
+                  // Data sudah ada dan valid
+                  final riwayatList = snapshot.data!;
+
+                  return ListView.builder(
+                    itemCount: riwayatList.length,
+                    itemBuilder: (context, index) {
+                      final item = riwayatList[index];
+                      return Card(
+                        margin: EdgeInsets.symmetric(vertical: 2),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          side: BorderSide(color: Colors.black),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                flex: 3,
+                                child: Text(
+                                  // Format tanggal sesuai kebutuhan
+                                  item.tanggalIndo, 
+                                ),
                               ),
-                            ),
+                              Expanded(
+                                flex: 2,
+                                child: Container(
+                                  padding: const EdgeInsets.all(12),
+                                  color: Colors.green.withAlpha(25),
+                                  child: Text(
+                                    item.suhu.toString(), // Misal status adalah suhu atau info lain
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                flex: 2,
+                                child: Text(
+                                  // Format waktu dari createdAt jika perlu
+                                  item.jamIndo,
+                                  textAlign: TextAlign.end,
+                                ),
+                              ),
+                            ],
                           ),
-                          Expanded(
-                            flex: 2,
-                            child: Text(
-                              item['waktu'] ?? '',
-                              textAlign: TextAlign.end,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                        ),
+                      );
+                    },
                   );
                 },
               ),

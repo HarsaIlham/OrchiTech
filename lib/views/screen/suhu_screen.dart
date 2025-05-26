@@ -1,10 +1,14 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_advanced_switch/flutter_advanced_switch.dart';
 import 'package:orchitech/controllers/aktivasi_pendingin_controller.dart';
 import 'package:orchitech/controllers/sensor_suhu_controller.dart';
+import 'package:orchitech/provider/status_pendingin_provider.dart';
 import 'package:orchitech/views/pages/riwayat_pendingin.dart';
+import 'package:provider/provider.dart';
 import '/widget/appbar.dart';
 import 'package:numberpicker/numberpicker.dart';
 
@@ -20,21 +24,46 @@ class _ScreenSuhuState extends State<ScreenSuhu> {
   final _pendinginController = AktivasiPendinginController();
   final _suhuController = SensorSuhuController();
   final _controller = ValueNotifier<bool>(false);
+  late StreamSubscription _statusSub;
   double suhu = 0.0;
   int kelembaban = 0;
   int batassuhu = 0;
   String desKelembaban = "";
+  bool _updateBySistem = false;
 
+  /// Mendengarkan perubahan status pendingin dari database.
   @override
   void initState() {
     super.initState();
-    _pendinginController.showStatusPendingin().listen((data) {
-      if (data != null) {
-        setState(() {
-          _controller.value = data.statusPendingin;
-        });
-      }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final provider = context.read<StatusPendinginProvider>();
+      _controller.value = provider.status; // Inisialisasi awal
+
+      provider.addListener(() {
+        if (_controller.value != provider.status) {
+          _updateBySistem = true;
+          _controller.value = provider.status;
+        }
+      });
     });
+
+    _controller.addListener(() {
+      if (_updateBySistem) {
+        _updateBySistem = false;
+        return;
+      }
+
+      print("UPDATE BY USER = ${_controller.value}");
+      _pendinginController.editStatusPendingin(_controller.value);
+    });
+  }
+
+  @override
+  void dispose() {
+    _statusSub.cancel();
+    _controller.dispose();
+    super.dispose();
   }
 
   void _editSuhu() {
@@ -67,7 +96,7 @@ class _ScreenSuhuState extends State<ScreenSuhu> {
                 ElevatedButton(
                   onPressed: () {
                     setState(() {
-                      batassuhu = tempValue;
+                      _pendinginController.editBatasSuhu(tempValue);
                     });
                     Navigator.of(context).pop();
                   },
@@ -89,7 +118,6 @@ class _ScreenSuhuState extends State<ScreenSuhu> {
       },
     );
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -238,52 +266,59 @@ class _ScreenSuhuState extends State<ScreenSuhu> {
                           fontSize: 20,
                         ),
                       ),
-                      onChanged: (dynamic rawValue) {
-                        _pendinginController.editStatusPendingin(
-                          rawValue as bool,
-                        );
-                      },
                     ),
                   ),
                 ),
-
                 SizedBox(height: 20),
-                Card(
-                  elevation: 4,
-                  child: ListTile(
-                    title: Text(
-                      'Batas Suhu',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 20,
-                      ),
-                    ),
-                    subtitle: Text(
-                      'Pendingin aktif pada suhu',
-                      style: TextStyle(fontSize: 14),
-                    ),
-                    contentPadding: EdgeInsets.fromLTRB(24, 18, 24, 18),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      side: BorderSide(color: Colors.black.withOpacity(0.2)),
-                    ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.edit_square, color: Colors.black),
-                        Text(
-                          '$batassuhu°C',
+                StreamBuilder(
+                  stream: _pendinginController.getDatabaseStream(),
+                  builder: (context, snapshot) {
+                    if (!snapshot.hasData) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    final data = snapshot.data!;
+                    batassuhu = data.batasSuhu;
+                    return Card(
+                      elevation: 4,
+                      child: ListTile(
+                        title: Text(
+                          'Batas Suhu',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            fontSize: 30,
+                            fontSize: 20,
                           ),
                         ),
-                      ],
-                    ),
-                    tileColor: const Color.fromARGB(255, 255, 255, 255),
-                    onTap: _editSuhu,
-                  ),
+                        subtitle: Text(
+                          'Pendingin aktif pada suhu',
+                          style: TextStyle(fontSize: 14),
+                        ),
+                        contentPadding: EdgeInsets.fromLTRB(24, 18, 24, 18),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          side: BorderSide(
+                            color: Colors.black.withOpacity(0.2),
+                          ),
+                        ),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.edit_square, color: Colors.black),
+                            Text(
+                              '$batassuhu°C',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 30,
+                              ),
+                            ),
+                          ],
+                        ),
+                        tileColor: const Color.fromARGB(255, 255, 255, 255),
+                        onTap: _editSuhu,
+                      ),
+                    );
+                  },
                 ),
+
                 SizedBox(height: 20),
                 Card(
                   elevation: 4,

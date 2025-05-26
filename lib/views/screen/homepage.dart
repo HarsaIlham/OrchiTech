@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:orchitech/controllers/aktivasi_pendingin_controller.dart';
 import 'package:orchitech/controllers/sensor_suhu_controller.dart';
 import 'package:orchitech/models/sensor_suhu.dart';
+import 'package:orchitech/provider/status_pendingin_provider.dart';
+import 'package:orchitech/provider/status_penyiraman_provider.dart';
+import 'package:provider/provider.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -15,14 +18,26 @@ class _HomePageState extends State<HomePage> {
   final _pendinginController = AktivasiPendinginController();
   final _suhuController = SensorSuhuController();
   String desKelembaban = '';
+  int batasSuhu = 0;
 
   @override
   void initState() {
+    _pendinginController.getDatabaseStream().listen((data) {
+      if (data != null) {
+        setState(() {
+          batasSuhu = data.batasSuhu;
+        });
+      }
+    });
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
+    final statusPendingin = context.watch<StatusPendinginProvider>().status;
+    final statusPenyiraman1 = context.watch<StatusPenyiramanProvider>().status1;
+    final statusPenyiraman2 = context.watch<StatusPenyiramanProvider>().status2;
+    print(statusPendingin);
     return StreamBuilder<SensorSuhu?>(
       stream: _suhuController.sensorStream,
       builder: (context, snapshot) {
@@ -236,9 +251,9 @@ class _HomePageState extends State<HomePage> {
                 child: dashboardCard(
                   image: 'assets/images/bg_Penyiraman.png',
                   text1: 'Jalur 1:',
-                  text2: 'Off',
+                  text2: statusPenyiraman1 ? 'On' : 'Off',
                   text4: 'Jalur 2:',
-                  text5: 'Off',
+                  text5: statusPenyiraman2 ? 'On' : 'Off',
                   img1: 'assets/images/icon_siram.png',
                   onPressed: () {},
                 ),
@@ -260,24 +275,15 @@ class _HomePageState extends State<HomePage> {
               const SizedBox(height: 5),
               Padding(
                 padding: const EdgeInsets.fromLTRB(28, 0, 28, 0),
-                child: StreamBuilder(
-                  stream: _pendinginController.showStatusPendingin(),
-                  builder: (context, snapshot) {
-                    if (!snapshot.hasData) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-                    final data = snapshot.data!;
-                    return dashboardCard(
-                      image: 'assets/images/bg_status.png',
-                      text1: 'Batas Suhu:',
-                      text2: '${data.batasSuhu}°',
-                      text3: 'Celcius',
-                      text4: 'Status:',
-                      text5: data.statusPendingin ? 'On' : 'Off',
-                      img1: 'assets/images/icon_matahari.png',
-                      onPressed: () {},
-                    );
-                  },
+                child: dashboardCard(
+                  image: 'assets/images/bg_status.png',
+                  text1: 'Batas Suhu:',
+                  text2: '$batasSuhu°',
+                  text3: 'Celcius',
+                  text4: 'Status:',
+                  text5: statusPendingin == true ? 'On' : 'Off',
+                  img1: 'assets/images/icon_matahari.png',
+                  onPressed: () {},
                 ),
               ),
             ],
