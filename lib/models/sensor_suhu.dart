@@ -46,7 +46,7 @@ class SensorSuhu {
 
   static Stream<SensorSuhu?>? _sensorStream;
 
-  static Stream<SensorSuhu?> getSuhu() {
+  static Stream<SensorSuhu?> getSuhudanKelembaban() {
     // Jika sudah ada stream, langsung return yang sudah diinisialisasi
     if (_sensorStream != null) {
       return _sensorStream!;
